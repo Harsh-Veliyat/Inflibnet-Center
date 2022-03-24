@@ -1,0 +1,1 @@
+pip install django djongo pymongo==3.12.3 django_rest_framework django_cors_headers pyJWT bson drf_yasg
