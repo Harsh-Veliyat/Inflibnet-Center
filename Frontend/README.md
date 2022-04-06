@@ -1,5 +1,5 @@
 
-To install dependencies, run:
+# To install dependencies, run:
 "npm install axios bootstrap ag-grid-community ag-grid-react"
 
 
