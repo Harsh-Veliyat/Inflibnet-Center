@@ -1,0 +1,71 @@
+import React from 'react';
+import './App.css';
+//Bootstrap and jQuery libraries
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'jquery/dist/jquery.min.js';
+//Datatable Modules
+import "datatables.net-dt/js/dataTables.dataTables"
+import "datatables.net-dt/css/jquery.dataTables.min.css"
+import $ from 'jquery'; 
+import axios from 'axios';
+
+  class App extends React.Component {
+    componentDidMount(){
+    var  data = {}
+    axios.get('http://127.0.0.1:8000/react/').then((res) =>{
+            data  =res.data
+        
+    });
+    
+    //initialize datatable
+    $(document).ready(function () {
+        $('#example').DataTable({
+        "aaData": data,
+        
+        "aoColumns": [
+            {"mDataProp": "DOI"},
+            {"mDataProp": "DOI"},
+            {"mDataProp": "DOI"}
+        ]
+        
+        });
+    });
+}
+   
+    render(){
+      //Datatable HTML
+    return (
+      <div className="MainDiv">
+        <div class="jumbotron text-center bg-sky">
+            <h3>Therichpost.com</h3>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <div className="container">
+            
+            <table id="example" class="display">
+              <thead>
+                  <tr>
+                      <th>Name</th>
+                      <th>Position</th>
+                      <th>Office</th>
+                      <th>Age</th>
+                      <th>Start date</th>
+                      <th>Salary</th>
+                  </tr>
+              </thead>
+              
+              
+          </table>
+            
+          </div>
+        </div>
+    );
+  }
+  }
+  export default App;
+
+
+
+
+
+
