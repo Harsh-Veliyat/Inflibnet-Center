@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { getData } from "../services/UserServices";
+import { getData, postData } from "../services/UserServices";
 import {AgGridReact} from 'ag-grid-react'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css'; 
+import swal from 'sweetalert'
 // import Helmet from "react-helmet";
 // import 'bootstrap/dist/css/bootstrap.min.css';
 // import "datatables.net-dt/js/dataTables.dataTables"
@@ -27,7 +28,7 @@ const GetDataComponent = props =>{
     const [gridColumnApi, setGridColumnApi] = useState(null)
     const [gridApi, setGridApi] = useState(null)
     const [hideColumn, setHideColumn] = useState(false)
-    const[limit,setLimit]=useState(5)
+    const[limit,setLimit]=useState(3)
     // const limit = 5
     useEffect(()=>{
         getData(limit).then((res)=>{
@@ -39,15 +40,20 @@ const GetDataComponent = props =>{
             headerName: 'Sr.',
             field: 'Sr',
             checkboxSelection:true,
+            headerCheckboxSelection:true,
+            editable:false, 
+            
             
         },
         {   
             headerName: 'id',
             field: '_id',
+            editable:false,
         },
         {   
             headerName: 'DOI',
-            field: 'DOI'
+            field: 'DOI',
+            editable:false,
         },
         {   
             headerName: 'Title',
@@ -55,7 +61,8 @@ const GetDataComponent = props =>{
         },
         {   
             headerName: 'Author.AuthorName',
-            field: 'authorName'
+            field: 'authorName',
+            editable:false,
         },
         {   
             headerName: 'Author.AuthorGiven',
@@ -80,8 +87,49 @@ const GetDataComponent = props =>{
         filter:true,
         floatingFilter:true,
         flex:1,
-        hide:false
+        resizable:true,
+        hide:false,
+        headerCheckboxSelectionFilteredOnly:true,
+        valueSetter:(params)=>{
+            console.log(params.newValue)
+            if(params.newValue !== params.oldValue){
+                var newValue = params.newValue
+                swal({
+                    title: `Are you sure you want to update \n ${params.oldValue} \nto \n${params.newValue}?`, 
+                    // showCancelButton:true,
+                    // confirmButtonText:'Yes',
+                    // cancelButtonText:'Cancel',
+                    buttons:['Cancel','Yes'],
+                }).then((isConfirm)=>{
+                    if(isConfirm){
+                        const updateValue = {}
+                        if(params.column.colId === 'title'){
+                            updateValue['field']=params.column.colId
+                            updateValue['value']=newValue
+                        }
+                        else if(params.column.colId === 'affiliation'){
+                            updateValue['field']="name"
+                            updateValue['value']=newValue
+                            updateValue['authorId']=params.data.authorId
+                            updateValue['affiliationId']=params.data.affiliationId
+                        }
+                        else{
+                            updateValue['field']=params.column.colId
+                            updateValue['value']=newValue
+                            updateValue['authorId']=params.data.authorId
+                            if (params.column.colId === 'given')
+                                updateValue['otherName'] = params.data.family
+                            else    
+                                updateValue['otherName'] = params.data.given
+                        }
+                        postData(params.data._id, updateValue).then(()=>getData(limit).then((res)=>setData(res.data))).then(()=>console.log('done'))
+                    }
+                })
+            }
+        }
     }
+
+
 
     const handleChange=(e)=>{
         const {value} = e.target
@@ -105,7 +153,11 @@ const GetDataComponent = props =>{
     const rowSelectionType = 'multiple'
 
     const onSelectionChanged = event =>{
-        console.log(event.api.getSelectedRows())
+        var selectedData = event.api.getSelectedRows()
+        // console.log(selectedData, typeof(selectedData), selectedData.length)
+        for(var i = 0; i < selectedData.length; i++){
+            console.log(selectedData[i])
+        }
     }
 
     const isRowSelectable = node =>{
@@ -121,7 +173,7 @@ const GetDataComponent = props =>{
     return <div>
         
         <form name="Limit" className="mt-5 text-center">
-        <label style={{fontSize:'15px'}}>Limit</label>  <input type='number' placeholder="Default 5 " id="limit" onChange={handleChange} name="Limit"></input>   <input type='submit' className="btn btn-danger me-3" name='submit' id="submit" onClick={(e)=>submit(e)} />
+        <label style={{fontSize:'15px'}}>Limit</label>  <input type='number' placeholder="Default 3 " id="limit" onChange={handleChange} name="Limit"></input>   <input type='submit' className="btn btn-danger me-3" name='submit' id="submit" onClick={(e)=>submit(e)} />
         </form>
         <div className="text-center mt-5">
         <label  className="h3">Hide/Unhide:</label>
@@ -147,6 +199,7 @@ const GetDataComponent = props =>{
             pagination={'True'}
             domLayout={'autoHeight'}
             paginationPageSize={15}
+            suppressRowClickSelection={true}
         />
         <div className="mt-2 mb-1 text-center"><button className="btn btn-success" style={{textAlign:"center", }} onClick={()=>onExportClick()}>export</button></div>
         </div>
